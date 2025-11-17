@@ -5,7 +5,7 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 
-from env.connect4_env import Connect4Env
+from connect4_env.connect4_env import Connect4Env
 from agents.random_agent import RandomAgent
 import time
 
