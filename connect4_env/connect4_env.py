@@ -33,3 +33,31 @@ class Connect4Env:
         reward=0
         return self.board.copy(), reward, done
 
+
+   
+    def check_win(self, player):
+        board = self.board
+        # horizontal
+        for r in range(self.rows):
+            for c in range(self.cols - 3):
+                if all(board[r][c+i] == player for i in range(4)):
+                    return True
+        # vertical
+        for c in range(self.cols):
+            for r in range(self.rows - 3):
+                if all(board[r+i][c] == player for i in range(4)):
+                    return True
+        # positive diagonal
+        for r in range(self.rows - 3):
+            for c in range(self.cols - 3):
+                if all(board[r+i][c+i] == player for i in range(4)):
+                    return True
+        # negative diagonal
+        for r in range(3, self.rows):
+            for c in range(self.cols - 3):
+                if all(board[r-i][c+i] == player for i in range(4)):
+                    return True
+        return False
+
+    def is_draw(self):
+        return len(self.get_valid_actions()) == 0
