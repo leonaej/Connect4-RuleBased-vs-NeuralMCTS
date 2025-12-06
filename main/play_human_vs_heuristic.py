@@ -1,5 +1,3 @@
-
-
 import sys
 from pathlib import Path
 
@@ -25,6 +23,14 @@ def main():
 
     print("You are ○ (player -1). Heuristic is ● (player 1)")
     print("Columns go from 0 to 6.\n")
+    
+    # Ask who starts
+    start_choice = input("Do you want to start first? (y/n): ").lower()
+    if start_choice == 'y':
+        env.current_player = -1  # You start
+    else:
+        env.current_player = 1   # Heuristic starts
+    
     print_board(env.board)
 
     while True:
@@ -44,7 +50,7 @@ def main():
             print_board(env.board)
 
             if env.check_win(-1):
-                print("\n🎉 YOU WIN!")
+                print("\n  YOU WIN!")
                 break
             if env.is_draw():
                 print("\nIt's a draw.")

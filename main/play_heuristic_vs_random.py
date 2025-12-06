@@ -4,95 +4,123 @@ from pathlib import Path
 import sys
 
 
-
-def pretty_print(board):
-    """Print Connect4 board nicely with circles for players."""
-    symbols = {0: ".", 1: "●", -1: "○"}
-    rows, cols = board.shape
-    print("\nBoard:")
-    for r in range(rows):
-        print(" ".join(symbols[int(cell)] for cell in board[r]))
-    print("-" * (2 * cols - 1))  # line under board
-
-
-
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from connect4_env.connect4_env import Connect4Env
 from agents.random_agent import RandomAgent
-from agents.heuristic_agent import HeuristicAgent, check_win
+from agents.heuristic_agent import HeuristicAgent
 
 
 NUM_GAMES = 400
-SLEEP = 0.5  
-HEURISTIC_PLAYER = 1  #
+HEURISTIC_PLAYER = 1  # Heuristic plays as player 1
 
 
 def pretty_print(board):
-    # simple visual: 0 -> ., 1 -> X, -1 -> O
-    symbols = {0: ".", 1: "X", -1: "O"}
-    for r in range(board.shape[0]):
-        print(" ".join(symbols[int(x)] for x in board[r]))
-    print()
+    """Print Connect4 board nicely."""
+    symbols = {0: ".", 1: "●", -1: "○"}
+    rows, cols = board.shape
+    print("\nBoard:")
+    for r in range(rows):
+        print(" ".join(symbols[int(cell)] for cell in board[r]))
+    print("-" * (2 * cols - 1))
+
 
 def play_one_game(starting_player, depth=3, verbose=False):
+    
     env = Connect4Env()
-    env.current_player = starting_player
-    state = env.reset()
+    env.reset()
+    env.current_player = starting_player  # Set who starts
+    
     agent_h = HeuristicAgent(depth=depth)
     agent_r = RandomAgent()
 
-    while True:
+    move_count = 0
+    max_moves = 42
+
+    while move_count < max_moves:
+        # Select action based on current player
         if env.current_player == HEURISTIC_PLAYER:
             action = agent_h.select_action(env)
         else:
-            action = agent_r.select_action(env.get_valid_actions())
+            valid_actions = env.get_valid_actions()
+            action = agent_r.select_action(valid_actions)
 
+        # Store who moved before the move changes current_player
+        player_who_moved = env.current_player
+        
+        # Make the move
         state, reward, done = env.step(action)
-
-
+        move_count += 1
 
         if verbose:
-            pretty_print(state)
-            last_player = -env.current_player
-            print(f"Player {'●' if last_player==1 else '○'} played column {action}\n")
+            pretty_print(env.board)
+            print(f"Player {'●' if player_who_moved==1 else '○'} played column {action}\n")
             time.sleep(0.3)
 
-        last_player = -env.current_player
+        # Check if player who just moved won
+        if env.check_win(player_who_moved):
+            if verbose:
+                winner_symbol = '●' if player_who_moved == 1 else '○'
+                print(f"Player {winner_symbol} wins!")
+            return player_who_moved  # Return winner (1 or -1)
 
-        if check_win(state, last_player):
-            return last_player  # winner (1 or -1)
+        # Check for draw
+        if env.is_draw():
+            if verbose:
+                print("Draw!")
+            return 0  # Draw
 
-        if len(env.get_valid_actions()) == 0:
-            return 0  # draw
-        
+    # If max moves reached (shouldn't happen with is_draw check)
+    return 0
+
 
 def main():
+    print("="*70)
+    print("HEURISTIC vs RANDOM AGENT")
+    print("="*70)
+    print(f"Playing {NUM_GAMES} games...")
+    print(f"Heuristic is player {HEURISTIC_PLAYER}")
+    print("="*70 + "\n")
+    
     stats = {"heuristic": 0, "random": 0, "draw": 0}
-    #alternating, reducing bias
+    
+    # Alternate starting player to reduce bias
     starting = 1
+    
     for g in range(1, NUM_GAMES + 1):
         winner = play_one_game(starting_player=starting, depth=3, verbose=False)
 
+        # Record result
         if winner == HEURISTIC_PLAYER:
             stats["heuristic"] += 1
             result = "Heuristic"
-        elif winner == 0:
-            stats["draw"] += 1
-            result = "Draw"
-        else:
+        elif winner == -HEURISTIC_PLAYER:
             stats["random"] += 1
             result = "Random"
+        else:
+            stats["draw"] += 1
+            result = "Draw"
 
-        print(f"Game {g}: Starter={starting} Winner={result}")
+        # Print progress every 50 games
+        if g % 50 == 0 or g == NUM_GAMES:
+            print(f"Game {g}/{NUM_GAMES}: Starter={'●' if starting==1 else '○'} "
+                  f"Winner={result} | "
+                  f"H:{stats['heuristic']} R:{stats['random']} D:{stats['draw']}")
         
+        # Alternate starter
         starting = -starting
 
-    print("\n=== Summary ===")
-    print(f"Heuristic wins: {stats['heuristic']}")
-    print(f"Random wins:    {stats['random']}")
-    print(f"Draws:          {stats['draw']}")
+    # Final summary
+    print("\n" + "="*70)
+    print("FINAL RESULTS")
+    print("="*70)
+    print(f"Heuristic wins: {stats['heuristic']:3d} ({stats['heuristic']/NUM_GAMES*100:.1f}%)")
+    print(f"Random wins:    {stats['random']:3d} ({stats['random']/NUM_GAMES*100:.1f}%)")
+    print(f"Draws:          {stats['draw']:3d} ({stats['draw']/NUM_GAMES*100:.1f}%)")
+    print("="*70)
+    
+    
 
 if __name__ == "__main__":
     main()

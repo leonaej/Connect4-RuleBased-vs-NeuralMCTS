@@ -6,6 +6,29 @@ __pycache__/
 # C extensions
 *.so
 
+
+
+#ignore files here 
+logs/*
+logs2/*
+
+#ones to upload is 
+!logs/learning_curves.png
+!logs/model_iter_50.pt
+!logs/model_vs_heuristic_iter_10.pt
+!logs/training_combined_history.png
+!logs/training_logs.json
+!logs/training_vs_heuristic_curves.png
+!logs/training_vs_heuristic_logs.json
+
+!logs2/model_net2_boosted_iter_110.pt
+!logs2/model_net2_iter_60.pt
+!logs2/training_boosted_curves.png
+!logs2/training_boosted_logs.json
+!logs2/training_net2_curves.png
+!logs2/training_net2_logs.json
+
+
 # Distribution / packaging
 .Python
 build/
